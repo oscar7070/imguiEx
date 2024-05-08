@@ -1459,6 +1459,37 @@ void ImDrawList::AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, c
     PathStroke(col, ImDrawFlags_Closed, thickness);
 }
 
+// ExtremeEngine changes
+// https://github.com/ocornut/imgui/issues/5483
+// Assuming col_out's alpha is zero means we don't need to draw and outer AA fringe as AddCircleFilled() would.
+void ImDrawList::AddRadialGradient(const ImVec2& center, float radius, ImU32 col_in, ImU32 col_out)
+{
+    if (((col_in | col_out) & IM_COL32_A_MASK) == 0 || radius < 0.5f)
+        return;
+
+    // Use arc with automatic segment count
+    _PathArcToFastEx(center, radius, 0, IM_DRAWLIST_ARCFAST_SAMPLE_MAX, 0);
+    const int count = _Path.Size - 1;
+
+    unsigned int vtx_base = _VtxCurrentIdx;
+    PrimReserve(count * 3, count + 1);
+
+    // Submit vertices
+    const ImVec2 uv = _Data->TexUvWhitePixel;
+    PrimWriteVtx(center, uv, col_in);
+    for (int n = 0; n < count; n++)
+        PrimWriteVtx(_Path[n], uv, col_out);
+
+    // Submit a fan of triangles
+    for (int n = 0; n < count; n++)
+    {
+        PrimWriteIdx((ImDrawIdx)(vtx_base));
+        PrimWriteIdx((ImDrawIdx)(vtx_base + 1 + n));
+        PrimWriteIdx((ImDrawIdx)(vtx_base + 1 + ((n + 1) % count)));
+    }
+    _Path.Size = 0;
+}
+
 void ImDrawList::AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col)
 {
     if ((col & IM_COL32_A_MASK) == 0)

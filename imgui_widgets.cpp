@@ -810,6 +810,7 @@ bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
     return ArrowButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None);
 }
 
+// ExtremeEngine changes
 // Button to close a window
 bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
 {
@@ -837,8 +838,11 @@ bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
     // FIXME: Clarify this mess
     ImU32 col = GetColorU32(held ? ImGuiCol_ButtonActive : ImGuiCol_ButtonHovered);
     ImVec2 center = bb.GetCenter();
-    if (hovered)
-        window->DrawList->AddCircleFilled(center, ImMax(2.0f, g.FontSize * 0.5f + 1.0f), col);
+    if (hovered) {
+        const float circleRadius = ImMax(2.0f, g.FontSize * 0.5f + 1.0f);
+        window->DrawList->AddCircleFilled(center, circleRadius, col);
+        window->DrawList->AddCircle(center, circleRadius, GetColorU32(ImGuiCol_Text, .5f));
+    }
 
     float cross_extent = g.FontSize * 0.5f * 0.7071f - 1.0f;
     ImU32 cross_col = GetColorU32(ImGuiCol_Text);

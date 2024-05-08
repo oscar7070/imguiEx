@@ -3520,18 +3520,50 @@ void ImGui::RenderTextEllipsis(ImDrawList* draw_list, const ImVec2& pos_min, con
         LogRenderedText(&pos_min, text, text_end_full);
 }
 
+//ExtremeEngine Changes
 // Render a rectangle shaped with optional rounding and borders
 void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border, float rounding)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
-    window->DrawList->AddRectFilled(p_min, p_max, fill_col, rounding);
+    ImVec2 cursorPos = g.IO.MousePos;
+    //window->DrawList->AddRectFilled(p_min, p_max, fill_col, rounding);
+    //if (border && border_size > 0.0f)
+    //{
+    //    window->DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
+    //    window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+    //}
+
+    const ImVec4 baseColor = ColorConvertU32ToFloat4(fill_col);
+    const ImVec4 bg_color_1 = ImVec4{ baseColor.x * 1.2f, baseColor.y * 1.2f, baseColor.z * 1.2f, baseColor.w * 1.2f };
+    const ImVec4 bg_color_2 = ImVec4{ bg_color_1.x * .8f, bg_color_1.y * .8f, bg_color_1.z * .8f, bg_color_1.w * .8f };
+    // Modify colors (ultimately this can be prebaked in the style)
+
+    const ImU32 bg_color_1imU32 = ColorConvertFloat4ToU32(bg_color_1);
+    const ImU32 bg_color_2imU32 = ColorConvertFloat4ToU32(bg_color_2);
+
     const float border_size = g.Style.FrameBorderSize;
-    if (border && border_size > 0.0f)
+    if (rounding == 0)
     {
-        window->DrawList->AddRect(p_min + ImVec2(1, 1), p_max + ImVec2(1, 1), GetColorU32(ImGuiCol_BorderShadow), rounding, 0, border_size);
-        window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, border_size);
+        // Faster without rounding
+        window->DrawList->AddRectFilledMultiColor(p_min, p_max, bg_color_1imU32, bg_color_1imU32, bg_color_2imU32, bg_color_2imU32);
     }
+    else
+    {
+        // Slow with rounding
+        int vert_start_idx = window->DrawList->VtxBuffer.Size;
+        window->DrawList->AddRectFilled(p_min, p_max, bg_color_1imU32, rounding);
+        int vert_end_idx = window->DrawList->VtxBuffer.Size;
+        ShadeVertsLinearColorGradientKeepAlpha(window->DrawList, vert_start_idx, vert_end_idx, p_min, ImRect(p_min, p_max).GetBL(), bg_color_1imU32, bg_color_2imU32);
+    }
+    if (ImRect(p_min, p_max).Contains(ImRect(cursorPos, cursorPos)))
+    {
+        PushClipRect(p_min, p_max, true);
+        window->DrawList->AddRadialGradient(cursorPos, 100.0f, IM_COL32(255, 255, 255, 25), IM_COL32(255, 255, 255, 0));
+        PopClipRect();
+    }
+    if (border_size > 0.0f)
+        window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, g.Style.FrameBorderSize);
 }
 
 void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding)
