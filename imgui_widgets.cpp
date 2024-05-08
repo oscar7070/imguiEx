@@ -7717,7 +7717,7 @@ bool ImGui::MenuItemEx(const char* label, const char* icon, const char* shortcut
         float w = label_size.x;
         window->DC.CursorPos.x += IM_TRUNC(style.ItemSpacing.x * 0.5f);
         ImVec2 text_pos(window->DC.CursorPos.x + offsets->OffsetLabel, window->DC.CursorPos.y + window->DC.CurrLineTextBaseOffset);
-        PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y));
+        PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x * 2.0f, style.ItemSpacing.y));
         pressed = Selectable("", selected, selectable_flags, ImVec2(w, 0.0f));
         PopStyleVar();
         if (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Visible)

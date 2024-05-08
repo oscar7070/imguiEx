@@ -3536,7 +3536,7 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool border,
     if (ImRect(p_min, p_max).Contains(ImRect(cursorPos, cursorPos)))
     {
         PushClipRect(p_min, p_max, true);
-        window->DrawList->AddRadialGradient(cursorPos, 100.0f, IM_COL32(255, 255, 255, 25), IM_COL32(255, 255, 255, 0));
+        window->DrawList->AddRadialGradient(cursorPos, 100.0f, ColorConvertFloat4ToU32(ImVec4{ 1,1,1,.1f }), ColorConvertFloat4ToU32(ImVec4{ 1,1,1,0 }));
         PopClipRect();
     }
     if (border_size > 0.0f)
