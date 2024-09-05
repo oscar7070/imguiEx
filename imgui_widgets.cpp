@@ -811,6 +811,41 @@ bool ImGui::ArrowButton(const char* str_id, ImGuiDir dir)
     return ArrowButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None);
 }
 
+//ExtremeEngine changes
+bool ImGui::TimelineArrowToButtonEx(const char* str_id, ImGuiDir dir, ImVec2 size, ImGuiButtonFlags flags, float scale)
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+
+    const ImGuiID id = window->GetID(str_id);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
+    const float default_size = GetFrameHeight();
+    ItemSize(size, (size.y >= default_size) ? g.Style.FramePadding.y : -1.0f);
+    if (!ItemAdd(bb, id))
+        return false;
+
+    bool hovered, held;
+    bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
+
+    // Render
+    const ImU32 bg_col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+    const ImU32 text_col = GetColorU32(ImGuiCol_Text);
+    RenderNavHighlight(bb, id);
+    RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
+    RenderTimelineArrowTo(window->DrawList, bb.Min + ImVec2(ImMax(0.0f, (size.x - g.FontSize) * 0.5f), ImMax(0.0f, (size.y - g.FontSize) * 0.5f)), text_col, dir, scale);
+
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
+    return pressed;
+}
+
+bool ImGui::TimelineArrowToButton(const char* str_id, ImGuiDir dir)
+{
+    float sz = GetFrameHeight();
+    return TimelineArrowToButtonEx(str_id, dir, ImVec2(sz, sz), ImGuiButtonFlags_None);
+}
+
 // ExtremeEngine changes
 // Button to close a window
 bool ImGui::CloseButton(ImGuiID id, const ImVec2& pos)
@@ -8992,7 +9027,7 @@ bool    ImGui::TabItemEx(ImGuiTabBar* tab_bar, const char* label, bool* p_open, 
         bb.Max.x = bb.Min.x + IM_TRUNC(ImLerp(bb.GetWidth(), tab->ContentWidth, ImSaturate((g.HoveredIdNotActiveTimer - 0.40f) * 6.0f)));
         display_draw_list = GetForegroundDrawList(window);
         TabItemBackground(display_draw_list, bb, flags, GetColorU32(ImGuiCol_TitleBgActive));
-    }
+}
 #endif
 
     // Render tab shape
