@@ -3730,27 +3730,30 @@ void ImGui::RenderFrame(ImVec2 p_min, ImVec2 p_max, ImU32 fill_col, bool borders
     const ImU32 bg_color_2imU32 = ColorConvertFloat4ToU32(bg_color_2);
 
     const float border_size = g.Style.FrameBorderSize;
-    if (rounding == 0)
+    if (borders && border_size > 0.0f)
     {
-        // Faster without rounding
-        window->DrawList->AddRectFilledMultiColor(p_min, p_max, bg_color_1imU32, bg_color_1imU32, bg_color_2imU32, bg_color_2imU32);
+        if (rounding == 0)
+        {
+            // Faster without rounding
+            window->DrawList->AddRectFilledMultiColor(p_min, p_max, bg_color_1imU32, bg_color_1imU32, bg_color_2imU32, bg_color_2imU32);
+        }
+        else
+        {
+            // Slow with rounding
+            int vert_start_idx = window->DrawList->VtxBuffer.Size;
+            window->DrawList->AddRectFilled(p_min, p_max, bg_color_1imU32, rounding);
+            int vert_end_idx = window->DrawList->VtxBuffer.Size;
+            ShadeVertsLinearColorGradientKeepAlpha(window->DrawList, vert_start_idx, vert_end_idx, p_min, ImRect(p_min, p_max).GetBL(), bg_color_1imU32, bg_color_2imU32);
+        }
+        if (ImRect(p_min, p_max).Contains(ImRect(cursorPos, cursorPos)))
+        {
+            PushClipRect(p_min, p_max, true);
+            window->DrawList->AddRadialGradient(cursorPos, 100.0f, IM_COL32(255, 255, 255, 25), IM_COL32(255, 255, 255, 0));
+            PopClipRect();
+        }
+        if (border_size > 0.0f)
+        window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, g.Style.FrameBorderSize);
     }
-    else
-    {
-        // Slow with rounding
-        int vert_start_idx = window->DrawList->VtxBuffer.Size;
-        window->DrawList->AddRectFilled(p_min, p_max, bg_color_1imU32, rounding);
-        int vert_end_idx = window->DrawList->VtxBuffer.Size;
-        ShadeVertsLinearColorGradientKeepAlpha(window->DrawList, vert_start_idx, vert_end_idx, p_min, ImRect(p_min, p_max).GetBL(), bg_color_1imU32, bg_color_2imU32);
-    }
-    if (ImRect(p_min, p_max).Contains(ImRect(cursorPos, cursorPos)))
-    {
-        PushClipRect(p_min, p_max, true);
-        window->DrawList->AddRadialGradient(cursorPos, 100.0f, IM_COL32(255, 255, 255, 25), IM_COL32(255, 255, 255, 0));
-        PopClipRect();
-    }
-    if (borders &&border_size > 0.0f)
-    window->DrawList->AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border), rounding, 0, g.Style.FrameBorderSize);
 }
 
 void ImGui::RenderFrameBorder(ImVec2 p_min, ImVec2 p_max, float rounding)
